@@ -16,7 +16,6 @@ use crate::shard::local_shard::LocalShard;
 use crate::shard::remote_shard::RemoteShard;
 use crate::shard::shard_config::ShardType;
 use crate::shard::shard_versioning::latest_shard_paths;
-use crate::shard::Shard::Local;
 use crate::shard::{ChannelService, CollectionId, Shard, ShardId, ShardTransfer};
 
 const SHARD_TRANSFERS_FILE: &str = "shard_transfers";
@@ -124,7 +123,7 @@ impl ShardHolder {
         temporary_shard: LocalShard,
     ) -> Option<Shard> {
         self.temporary_shards
-            .insert(shard_id, Local(temporary_shard))
+            .insert(shard_id, Shard::Local(temporary_shard))
     }
 
     /// Remove temporary shard
@@ -187,10 +186,8 @@ impl ShardHolder {
                         }
                     }
                     Some(shard) => match *shard {
-                        Shard::Local(_)
-                        | Shard::Proxy(_)
-                        | Shard::ReplicaSet(_)
-                        | Shard::ForwardProxy(_) => shard,
+                        Shard::Local(_) | Shard::Proxy(_) | Shard::ForwardProxy(_) => shard,
+                        Shard::ReplicaSet(_) => shard, // TODO https://github.com/qdrant/qdrant/issues/1101
                         Shard::Remote(_) => {
                             // check temporary shards if the target is a remote shard
                             let temporary_shard_opt = self.get_temporary_shard(&shard_selection);
